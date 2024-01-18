@@ -1061,6 +1061,7 @@ static const struct MPOpts mp_default_opts = {
         "scc",
         "smi",
         "srt",
+        "srv3",
         "ssa",
         "sub",
         "sup",

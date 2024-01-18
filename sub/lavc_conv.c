@@ -106,7 +106,9 @@ struct lavc_conv *lavc_conv_create(struct mp_log *log,
     priv->avctx = avctx;
     priv->extradata = talloc_strndup(priv, avctx->subtitle_header,
                                      avctx->subtitle_header_size);
-    disable_styles(bstr0(priv->extradata));
+    // The SRV3 decoder actually tries to replicate YouTube's styling
+    if(strcmp(codec->name, "srv3"))
+        disable_styles(bstr0(priv->extradata));
     return priv;
 
  error:
