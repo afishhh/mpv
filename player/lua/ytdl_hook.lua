@@ -85,6 +85,7 @@ local ext_map = {
 
 local codec_map = {
     -- src pattern  = mpv codec
+    ["srv3"]        = "srv3",
     ["vtt"]         = "webvtt",
     ["opus"]        = "opus",
     ["vp9"]         = "vp9",
@@ -911,7 +912,7 @@ local function run_ytdl_hook(url)
 
     local command = {
         ytdl.path, "--no-warnings", "-J", "--flat-playlist",
-        "--sub-format", "ass/srt/best"
+        "--sub-format", "ass/srv3/srt/best"
     }
 
     -- Checks if video option is "no", change format accordingly,
