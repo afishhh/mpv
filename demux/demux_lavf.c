@@ -202,7 +202,7 @@ static const struct format_hack format_hacks[] = {
     TEXTSUB("aqtitle"), TEXTSUB("jacosub"), TEXTSUB("microdvd"),
     TEXTSUB("mpl2"), TEXTSUB("mpsub"), TEXTSUB("pjs"), TEXTSUB("realtext"),
     TEXTSUB("sami"), TEXTSUB("srt"), TEXTSUB("stl"), TEXTSUB("subviewer"),
-    TEXTSUB("subviewer1"), TEXTSUB("vplayer"), TEXTSUB("ass"),
+    TEXTSUB("subviewer1"), TEXTSUB("vplayer"), TEXTSUB("ass"), TEXTSUB("srv3"),
 
     TEXTSUB_UTF8("webvtt"),
 
