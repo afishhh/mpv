@@ -530,7 +530,7 @@ static void configure_ass(struct sd *sd, struct mp_osd_res *dim,
     if (converted)
         ass_track_set_feature(track, ASS_FEATURE_WRAP_UNICODE, 1);
 #endif
-    if (converted) {
+    if (converted && strcmp(sd->codec->codec, "srv3")) {
         bool override_playres = true;
         char **ass_style_override_list = opts->ass_style_override_list;
         for (int i = 0; ass_style_override_list && ass_style_override_list[i]; i++) {
