@@ -597,7 +597,7 @@ static void configure_ass(struct sd *sd, struct mp_osd_res *dim,
         }
     }
 #endif
-    if (converted) {
+    if (converted && strcmp(sd->codec->codec, "srv3")) {
         bool override_playres = true;
         char **ass_style_override_list = opts->ass_style_override_list;
         for (int i = 0; ass_style_override_list && ass_style_override_list[i]; i++) {
