@@ -25,8 +25,14 @@
 #include <assert.h>
 #include <math.h>
 
+#include "config.h"
+
 #include <ass/ass.h>
 #include <ass/ass_types.h>
+#if HAVE_SUBRANDR
+#define SBR_ALLOW_UNSTABLE
+#include <subrandr/subrandr.h>
+#endif
 
 #include "common/common.h"
 #include "common/msg.h"
@@ -327,7 +333,9 @@ static bool pack_libass(struct mp_ass_packer *p, struct sub_bitmaps *res)
     return true;
 }
 
-static bool pack_rgba(struct mp_ass_packer *p, struct sub_bitmaps *res)
+// `pass` is only set if packing `SUBBITMAP_SUBRANDR` bitmaps.
+static bool pack_rgba(struct mp_ass_packer *p, struct sub_bitmaps *res,
+                      struct sbr_piece_raster_pass *pass)
 {
     struct mp_rect bb_list[MP_SUB_BB_LIST_MAX];
     int num_bb = mp_get_sub_bb_list(res, bb_list, MP_SUB_BB_LIST_MAX);
@@ -372,10 +380,18 @@ static bool pack_rgba(struct mp_ass_packer *p, struct sub_bitmaps *res)
                 s->y >= b->y + b->h || s->y + s->h <= b->y)
                 continue;
 
-            draw_ass_rgba(s->bitmap, s->w, s->h, s->stride,
-                          b->bitmap, b->stride,
-                          s->x - b->x, s->y - b->y,
-                          s->libass.color);
+            if (pass)
+                sbr_piece_raster_pass_draw_piece(
+                    pass, s->subrandr.piece,
+                    s->x - b->x, s->y - b->y,
+                    b->bitmap,
+                    b->w, b->h, b->stride / 4
+                );
+            else
+                draw_ass_rgba(s->bitmap, s->w, s->h, s->stride,
+                              b->bitmap, b->stride,
+                              s->x - b->x, s->y - b->y,
+                              s->libass.color);
         }
         fill_padding_4(b->bitmap, b->w, b->h, b->stride, padding);
     }
@@ -433,7 +449,7 @@ void mp_ass_packer_pack(struct mp_ass_packer *p, ASS_Image **image_lists,
 
     bool r = false;
     if (format == SUBBITMAP_BGRA) {
-        r = pack_rgba(p, &res);
+        r = pack_rgba(p, &res, NULL);
     } else {
         r = pack_libass(p, &res);
     }
@@ -446,6 +462,53 @@ void mp_ass_packer_pack(struct mp_ass_packer *p, ASS_Image **image_lists,
     p->cached_subs.change_id = 0;
     p->cached_subs_valid = true;
 }
+
+#if HAVE_SUBRANDR
+// Pack the contents of `pass` into a single image, and make `*out` point to it.
+// `*out` is completely overwritten.
+void mp_ass_packer_pack_sbr(struct mp_ass_packer *p, sbr_piece_raster_pass *pass,
+                            struct sub_bitmaps *out)
+{
+    *out = (struct sub_bitmaps){.change_id = 1};
+    p->cached_subs_valid = false;
+
+    struct sub_bitmaps res = {
+        .change_id = (unsigned)p->cached_subs.change_id + 1,
+        .format = SUBBITMAP_SUBRANDR,
+        .parts = p->cached_parts,
+        .video_color_space = false,
+    };
+
+    const struct sbr_output_piece *pieces = sbr_piece_raster_pass_get_pieces(pass);
+    for (const struct sbr_output_piece *piece = pieces; piece; piece = piece->next) {
+        if (piece->width == 0 || piece->height == 0)
+            continue;
+
+        MP_TARRAY_GROW(p, p->cached_parts, res.num_parts);
+        res.parts = p->cached_parts;
+        struct sub_bitmap *b = &res.parts[res.num_parts];
+        b->subrandr.piece = piece;
+        b->dw = b->w = piece->width;
+        b->dh = b->h = piece->height;
+        b->x = piece->x;
+        b->y = piece->y;
+        res.num_parts++;
+    }
+
+    if (!pack_rgba(p, &res, pass))
+        return;
+
+    *out = res;
+    p->cached_subs = res;
+    p->cached_subs_valid = true;
+}
+
+const struct sub_bitmaps *mp_ass_packer_get_cached(struct mp_ass_packer *p) {
+    if (p->cached_subs_valid)
+        return &p->cached_subs;
+    return NULL;
+}
+#endif
 
 // Set *out_rc to [x0, y0, x1, y1] of the graphical bounding box in script
 // coordinates.

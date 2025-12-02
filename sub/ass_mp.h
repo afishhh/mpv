@@ -26,6 +26,8 @@
 #include <ass/ass.h>
 #include <ass/ass_types.h>
 
+#include "config.h"
+
 // These PlayResX and PlayResY values are arbitrary and taken from lavc.
 // lavc assumes these values when converting to ass generally. Moreover, these
 // values are also used by default in VSFilter, so it isn't that arbitrary.
@@ -59,6 +61,12 @@ struct mp_ass_packer *mp_ass_packer_alloc(void *ta_parent);
 void mp_ass_packer_pack(struct mp_ass_packer *p, ASS_Image **image_lists,
                         int num_image_lists, bool changed, bool video_color_space,
                         int preferred_osd_format, struct sub_bitmaps *out);
+#if HAVE_SUBRANDR
+struct sbr_piece_raster_pass;
+void mp_ass_packer_pack_sbr(struct mp_ass_packer *p, struct sbr_piece_raster_pass *pass,
+                            struct sub_bitmaps *out);
+const struct sub_bitmaps *mp_ass_packer_get_cached(struct mp_ass_packer *p);
+#endif
 void mp_ass_get_bb(ASS_Image *image_list, ASS_Track *track,
                    struct mp_osd_res *res, double *out_rc);
 
