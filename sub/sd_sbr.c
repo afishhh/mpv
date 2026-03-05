@@ -20,6 +20,7 @@
 
 #include <subrandr/subrandr.h>
 #include <subrandr/logging.h>
+#include <subrandr/config.h>
 
 #include "mpv_talloc.h"
 
@@ -34,6 +35,7 @@
 
 struct sd_sbr_priv {
     struct sbr_library *sbr_library;
+    struct sbr_config *sbr_config;
     struct sbr_renderer *sbr_renderer;
     struct sbr_subtitles *sbr_subtitles;
     struct mp_osd_res prev_osd;
@@ -54,6 +56,7 @@ static void enable_output(struct sd *sd, bool enable)
             const char *error = sbr_get_last_error_string();
             mp_err(sd->log, "Failed to create renderer: %s\n", error);
         }
+        sbr_renderer_set_config(ctx->sbr_renderer, ctx->sbr_config);
     }
 }
 
@@ -70,6 +73,32 @@ static inline int mp_level_from_sbr_log_level(sbr_log_level level)
         case SBR_LOG_LEVEL_ERROR: // fallthrough
         default:
             return MSGL_WARN;
+    }
+}
+
+static void mp_set_sbr_opts(struct sd *sd)
+{
+    struct sd_sbr_priv *ctx = sd->priv;
+    char **opts = sd->opts->sbr_opts;
+
+    if (ctx->sbr_renderer)
+        sbr_renderer_set_config(ctx->sbr_renderer, NULL);
+    sbr_config_destroy(ctx->sbr_config);
+    ctx->sbr_config = sbr_config_new(ctx->sbr_library);
+    mp_sub_packer_invalidate_cached(ctx->packer);
+    if (!opts)
+        return;
+
+    for (int i = 0; opts[i]; i += 2) {
+        char *key = opts[i];
+        char *value = opts[i + 1];
+        sbr_bikeshed_result result = sbr_config_set_str(ctx->sbr_config, key, value, strlen(value));
+        if (result == SBR_BIKESHED_NOT_FOUND)
+            mp_warn(sd->log, "Option '%s' not found\n", key);
+        else if (result != 0) {
+            const char *error = sbr_get_last_error_string();
+            mp_warn(sd->log, "Failed to set option %s='%s': %s\n", key, value, error);
+        }
     }
 }
 
@@ -124,6 +153,8 @@ static int init(struct sd *sd)
     sbr_library_set_log_callback(ctx->sbr_library, mp_msg_sbr_log_callback, sd);
 
     ctx->packer = mp_sub_packer_alloc(ctx);
+
+    mp_set_sbr_opts(sd);
 
     enable_output(sd, true);
 
@@ -205,6 +236,7 @@ static struct sub_bitmaps *get_bitmaps(struct sd *sd, struct mp_osd_res dim,
                            !cached || sbr_renderer_did_change(ctx->sbr_renderer, &context, t);
     if (redraw_required) {
         sbr_renderer_set_subtitles(ctx->sbr_renderer, ctx->sbr_subtitles);
+        sbr_renderer_set_config(ctx->sbr_renderer, ctx->sbr_config);
         sbr_instanced_raster_pass *pass =
             sbr_renderer_render_instanced(ctx->sbr_renderer, &context, t, clip_rect, 0);
         if (!pass) {
@@ -243,6 +275,9 @@ static void uninit(struct sd *sd)
 static int control(struct sd *sd, enum sd_ctrl cmd, void *arg)
 {
     switch (cmd) {
+    case SD_CTRL_UPDATE_OPTS:
+        mp_set_sbr_opts(sd);
+        return CONTROL_OK;
     default:
         return CONTROL_UNKNOWN;
     }

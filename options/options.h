@@ -134,6 +134,7 @@ struct mp_subtitle_opts {
     int sub_glyph_limit;
     int sub_bitmap_max_size;
     char **sub_avopts;
+    char **sbr_opts;
 };
 
 // Options for both primary and secondary subs.

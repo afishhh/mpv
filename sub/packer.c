@@ -424,4 +424,8 @@ const struct sub_bitmaps *mp_sub_packer_get_cached(struct mp_sub_packer *p) {
         return &p->cached_subs;
     return NULL;
 }
+
+void mp_sub_packer_invalidate_cached(struct mp_sub_packer *p) {
+    p->cached_subs_valid = false;
+}
 #endif

@@ -39,6 +39,7 @@ struct sbr_instanced_raster_pass;
 void mp_sub_packer_pack_sbr(struct mp_sub_packer *p, struct sbr_instanced_raster_pass *pass,
                             struct sub_bitmaps *out);
 const struct sub_bitmaps *mp_sub_packer_get_cached(struct mp_sub_packer *p);
+void mp_sub_packer_invalidate_cached(struct mp_sub_packer *p);
 #endif
 
 #endif
