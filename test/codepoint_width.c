@@ -82,6 +82,131 @@ int main(void) {
     // ASCII characters with carriage return
     assert_int_equal(W("ABC\rDEF"), 3);
 
+
+
+    // Two-byte sequence (C0 80)
+    assert_int_equal(W("\xc0\x80"), 2);
+    // Three-byte sequence (E0 80 80)
+    assert_int_equal(W("\xe0\x80\x80"), 3);
+    // Four-byte sequence (F0 80 80 80)
+    assert_int_equal(W("\xf0\x80\x80\x80"), 4);
+    // Five-byte sequence (F8 80 80 80 80)
+    assert_int_equal(W("\xf8\x80\x80\x80\x80"), 5);
+    // Six-byte sequence (FC 80 80 80 80 80)
+    assert_int_equal(W("\xfc\x80\x80\x80\x80\x80"), 6);
+    // Two-byte sequence (C1 BF)
+    assert_int_equal(W("\xc1\xbf"), 2);
+    // Three-byte sequence (E0 81 BF)
+    assert_int_equal(W("\xe0\x81\xbf"), 3);
+    // Four-byte sequence (F0 80 81 BF)
+    assert_int_equal(W("\xf0\x80\x81\xbf"), 4);
+    // Five-byte sequence (F8 80 80 81 BF)
+    assert_int_equal(W("\xf8\x80\x80\x81\xbf"), 5);
+    // Six-byte sequence (FC 80 80 80 81 BF)
+    assert_int_equal(W("\xfc\x80\x80\x80\x81\xbf"), 6);
+    // Three-byte sequence (E0 82 80)
+    assert_int_equal(W("\xe0\x82\x80"), 3);
+    // Four-byte sequence (F0 80 82 80)
+    assert_int_equal(W("\xf0\x80\x82\x80"), 4);
+    // Five-byte sequence (F8 80 80 82 80)
+    assert_int_equal(W("\xf8\x80\x80\x82\x80"), 5);
+    // Six-byte sequence (FC 80 80 80 82 80)
+    assert_int_equal(W("\xfc\x80\x80\x80\x82\x80"), 6);
+    // Three-byte sequence (E0 9F BF)
+    assert_int_equal(W("\xe0\x9f\xbf"), 3);
+    // Four-byte sequence (F0 80 9F BF)
+    assert_int_equal(W("\xf0\x80\x9f\xbf"), 4);
+    // Five-byte sequence (F8 80 80 9F BF)
+    assert_int_equal(W("\xf8\x80\x80\x9f\xbf"), 5);
+    // Six-byte sequence (FC 80 80 80 9F BF)
+    assert_int_equal(W("\xfc\x80\x80\x80\x9f\xbf"), 6);
+    // Four-byte sequence (F0 80 A0 80)
+    assert_int_equal(W("\xf0\x80\xa0\x80"), 4);
+    // Five-byte sequence (F8 80 80 A0 80)
+    assert_int_equal(W("\xf8\x80\x80\xa0\x80"), 5);
+    // Six-byte sequence (FC 80 80 80 A0 80)
+    assert_int_equal(W("\xfc\x80\x80\x80\xa0\x80"), 6);
+    // Four-byte sequence (F0 8F BF BF)
+    assert_int_equal(W("\xf0\x8d\xbf\xbf"), 4);
+    // Five-byte sequence (F8 80 8F BF BF)
+    assert_int_equal(W("\xf8\x80\x8f\xbf\xbf"), 5);
+    // Six-byte sequence (FC 80 80 8F BF BF)
+    assert_int_equal(W("\xfc\x80\x80\x8f\xbf\xbf"), 6);
+    // Five-byte sequence (F8 80 90 80 80)
+    assert_int_equal(W("\xf8\x80\x90\x80\x80"), 5);
+    // Six-byte sequence (FC 80 80 90 80 80)
+    assert_int_equal(W("\xfc\x80\x80\x90\x80\x80"), 6);
+    // Five-byte sequence (F8 84 8F BF BF)
+    assert_int_equal(W("\xf8\x84\x8f\xbf\xbf"), 5);
+    // Six-byte sequence (FC 80 84 8F BF BF)
+    assert_int_equal(W("\xfc\x80\x84\x8f\xbf\xbf"), 6);
+    // One past Unicode (F4 90 80 80)
+    assert_int_equal(W("\xf4\x90\x80\x80"), 4);
+    // Longest five-byte sequence (FB BF BF BF BF)
+    assert_int_equal(W("\xfb\xbf\xbf\xbf\xbf"), 5);
+    // Longest six-byte sequence (FD BF BF BF BF BF)
+    assert_int_equal(W("\xfd\xbf\xbf\xbf\xbf\xbf"), 6);
+    // First surrogate (ED A0 80)
+    assert_int_equal(W("\xed\xa0\x80"), 3);
+    // Last surrogate (ED BF BF)
+    assert_int_equal(W("\xed\xbf\xbf"), 3);
+    // CESU-8 surrogate pair (ED A0 BD ED B2 A9)
+    assert_int_equal(W("\xed\xa0\xbd\xed\xb2\xa9"), 6);
+    // One past Unicode as five-byte sequence (F8 84 90 80 80)
+    assert_int_equal(W("\xf8\x84\x90\x80\x80"), 5);
+    // One past Unicode as six-byte sequence (FC 80 84 90 80 80)
+    assert_int_equal(W("\xfc\x80\x84\x90\x80\x80"), 6);
+    // First surrogate as four-byte sequence (F0 8D A0 80)
+    assert_int_equal(W("\xf0\x8d\xa0\x80"), 4);
+    // Last surrogate as four-byte sequence (F0 8D BF BF)
+    assert_int_equal(W("\xf0\x8d\xbf\xbf"), 4);
+    // CESU-8 surrogate pair as two four-byte overlongs (F0 8D A0 BD F0 8D B2 A9)
+    assert_int_equal(W("\xf0\x8d\xa0\xbd\xf0\x8d\xb2\xa9"), 8);
+    // One (80)
+    assert_int_equal(W("\x80"), 1);
+    // Two (80 80)
+    assert_int_equal(W("\x80\x80"), 2);
+    // Three (80 80 80)
+    assert_int_equal(W("\x80\x80\x80"), 3);
+    // Four (80 80 80 80)
+    assert_int_equal(W("\x80\x80\x80\x80"), 4);
+    // Five (80 80 80 80 80)
+    assert_int_equal(W("\x80\x80\x80\x80\x80"), 5);
+    // Six (80 80 80 80 80 80)
+    assert_int_equal(W("\x80\x80\x80\x80\x80\x80"), 6);
+    // Seven (80 80 80 80 80 80 80)
+    assert_int_equal(W("\x80\x80\x80\x80\x80\x80\x80"), 7);
+    // After valid two-byte (C2 B6 80)
+    assert_int_equal(W("\xc2\xb6\x80"), 2);
+    // After valid three-byte (E2 98 83 80)
+    assert_int_equal(W("\xe2\x98\x83\x80"), 2);
+    // After valid four-byte (F0 9F 92 A9 80)
+    assert_int_equal(W("\xf0\x9f\x92\xa9\x80"), 3);
+    // After five-byte (FB BF BF BF BF 80)
+    assert_int_equal(W("\xfb\xbf\xbf\xbf\xbf\x80"), 6);
+    // After six-byte (FD BF BF BF BF BF 80)
+    assert_int_equal(W("\xfd\xbf\xbf\xbf\xbf\xbf\x80"), 7);
+    // Two-byte lead (C2)
+    assert_int_equal(W("\xc2"), 1);
+    // Three-byte lead (E2)
+    assert_int_equal(W("\xe2"), 1);
+    // Three-byte lead and one trail (E2 98)
+    assert_int_equal(W("\xe2\x98"), 1);
+    // Four-byte lead (F0)
+    assert_int_equal(W("\xf0"), 1);
+    // Four-byte lead and one trail (F0 9F)
+    assert_int_equal(W("\xf0\x9f"), 1);
+    // Four-byte lead and two trails (F0 9F 92)
+    assert_int_equal(W("\xf0\x9f\x92"), 1);
+    // FE (FE)
+    assert_int_equal(W("\xfe"), 1);
+    // FE and trail (FE 80)
+    assert_int_equal(W("\xfe\x80"), 2);
+    // FF (FF)
+    assert_int_equal(W("\xff"), 1);
+    // FF and trail (FF 80)
+    assert_int_equal(W("\xff\x80"), 2);
+
     bstr str = bstr0("ABCDEF");
     const unsigned char *cut_pos;
 
