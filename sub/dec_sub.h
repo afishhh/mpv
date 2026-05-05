@@ -27,6 +27,7 @@ enum sd_text_type {
     SD_TEXT_TYPE_PLAIN,
     SD_TEXT_TYPE_ASS,
     SD_TEXT_TYPE_ASS_FULL,
+    SD_TEXT_TYPE_ANSI,
 };
 
 struct sd_times {

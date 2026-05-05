@@ -3394,6 +3394,8 @@ static int mp_property_sub_text(void *ctx, struct m_property *prop,
             type = SD_TEXT_TYPE_ASS;
         else if (!strcmp(ka->key, "ass-full"))
             type = SD_TEXT_TYPE_ASS_FULL;
+        else if (!strcmp(ka->key, "ansi"))
+            type = SD_TEXT_TYPE_ANSI;
         else
             return M_PROPERTY_UNKNOWN;
 

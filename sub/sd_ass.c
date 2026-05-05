@@ -875,7 +875,7 @@ static bstr get_text_buf(struct sd *sd, double pts, enum sd_text_type type)
         if (ipts >= event->Start && ipts < event->Start + event->Duration) {
             if (event->Text) {
                 int start = b->len;
-                if (type == SD_TEXT_TYPE_PLAIN) {
+                if (type == SD_TEXT_TYPE_PLAIN || type == SD_TEXT_TYPE_ANSI) {
                     ass_to_plaintext(b, event->Text);
                 } else if (type == SD_TEXT_TYPE_ASS_FULL) {
                     long long s = event->Start;
