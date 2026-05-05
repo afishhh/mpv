@@ -137,7 +137,7 @@ static bool update_subtitle(struct MPContext *mpctx, double video_pts,
 
         // Handle displaying subtitles on terminal.
         if (track->selected && track->type == STREAM_SUB && !mpctx->video_out) {
-            char *text = sub_get_text(dec_sub, video_pts, SD_TEXT_TYPE_PLAIN);
+            char *text = sub_get_text(dec_sub, video_pts, SD_TEXT_TYPE_ANSI);
             int order = get_order(mpctx, track);
             if (order >= 0)
                 term_osd_set_subs(mpctx, text, order);
