@@ -242,7 +242,10 @@ static struct sub_bitmaps *get_bitmaps(struct sd *sd, struct mp_osd_res dim,
 // This isn't perfect and messes up some unusual subtitles like braille
 // Bad Apple but it's the best we can do without coordinates.
 struct active_text_line {
-    bstr text;
+    // Unstyled text used for deduplication/ordering preservation.
+    bstr plain_text;
+    // Text actually returned by `get_text`, may be styled with ANSI sequences.
+    bstr display_text;
     bool alive;
 };
 
@@ -252,7 +255,8 @@ static void collect_dead_text_lines(struct sd_sbr_priv *ctx)
     for (int i = 0; i < ctx->n_text_lines;) {
         struct active_text_line *line = &ctx->text_lines[i + shift];
         if (!line->alive) {
-            talloc_free(line->text.start);
+            talloc_free(line->plain_text.start);
+            talloc_free(line->display_text.start);
             ++shift, --ctx->n_text_lines;
             continue;
         }
@@ -269,6 +273,9 @@ static char *get_text(struct sd *sd, double pts, enum sd_text_type type)
     if (pts == MP_NOPTS_VALUE || !ctx->sbr_subtitles)
         return NULL;
     uint32_t ms = lrint(pts * 1000);
+    uint64_t display_flags = 0;
+    if (type == SD_TEXT_TYPE_ANSI)
+        display_flags |= SBR_GET_EVENT_TEXT_STYLE_ANSI;
 
     if (!ctx->subtitle_iterator)
         ctx->subtitle_iterator = sbr_subtitle_iterator_new();
@@ -281,23 +288,30 @@ static char *get_text(struct sd *sd, double pts, enum sd_text_type type)
             continue;
 
         const char *text = sbr_subtitle_iterator_get_text(iter, 0);
+        struct active_text_line *found;
 
         for (int i = 0; i < ctx->n_text_lines; ++i) {
-            if (!bstrcmp0(ctx->text_lines[i].text, text)) {
+            if (!bstrcmp0(ctx->text_lines[i].plain_text, text)) {
                 if (!ctx->text_lines[i].alive) {
-                    total_len += ctx->text_lines[i].text.len;
-                    ctx->text_lines[i].alive = true;
+                    found = &ctx->text_lines[i];
+                    goto render;
                 }
                 goto skip;
             }
         }
 
-        struct active_text_line line = {
-            .text = bstrdup(ctx, bstr0(text)),
-            .alive = true,
-        };
-        MP_TARRAY_APPEND(ctx, ctx->text_lines, ctx->n_text_lines, line);
-        total_len += line.text.len;
+        MP_TARRAY_GROW(ctx, ctx->text_lines, ctx->n_text_lines);
+        found = &ctx->text_lines[ctx->n_text_lines++];
+        found->plain_text = bstrdup(ctx, bstr0(text));
+        found->display_text.start = NULL;
+
+    render:
+        found->alive = true;
+        found->display_text.len = 0;
+        const char *display_text =
+            sbr_subtitle_iterator_get_text_at(iter, ms, display_flags);
+        bstr_xappend0(ctx, &found->display_text, display_text);
+        total_len += found->display_text.len;
 
     skip:;
     }
@@ -314,8 +328,8 @@ static char *get_text(struct sd *sd, double pts, enum sd_text_type type)
     char *current = result;
     for (int i = 0; i < ctx->n_text_lines; ++i) {
         struct active_text_line *line = &ctx->text_lines[i];
-        memcpy(current, line->text.start, line->text.len);
-        current += line->text.len;
+        memcpy(current, line->display_text.start, line->display_text.len);
+        current += line->display_text.len;
         *current++ = '\n';
     }
     *--current = '\0';
