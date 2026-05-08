@@ -15,6 +15,8 @@
  * License along with mpv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+ // nothing substantial
+
 #include <math.h>
 #include <limits.h>
 
