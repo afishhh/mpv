@@ -89,6 +89,9 @@ struct demux_opts {
     bool force_retry_eof;
     char **directory_filter;
     int autocreate_playlist;
+#if HAVE_SUBRANDR
+    bool prefer_subrandr_for_webvtt;
+#endif
 };
 
 #define SEEK_FACTOR   (1 << 1)      // argument is in range [0,1]

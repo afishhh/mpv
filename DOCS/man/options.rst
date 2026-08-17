@@ -2525,6 +2525,18 @@ Subtitles
     times to add multiple files. Technically, ``--sub-file`` is a CLI/config
     file only alias for  ``--sub-files-append``.
 
+``--sub-prefer-subrandr-for-srv3``
+    Prefer subrandr for rendering external WebVTT subtitles (default: no).
+    Does not affect embedded subtitle streams.
+
+    This option is useful for subtitles that use more advanced WebVTT features
+    like ruby text or `STYLE` blocks.
+
+    .. note::
+
+        Styling options like `--sub-color` have no effect on subrandr-rendered
+        subtitles.
+
 ``--secondary-sid=<ID|auto|no>``
     Select a secondary subtitle stream. This is similar to ``--sid``. If a
     secondary subtitle is selected, it will be rendered as toptitle (i.e. on

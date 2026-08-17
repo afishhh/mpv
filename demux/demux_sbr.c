@@ -68,6 +68,7 @@ struct format_codec_info {
 static const struct format_codec_info fmt_to_codec[] = {
     [SBR_SUBTITLE_FORMAT_UNKNOWN] = {NULL, NULL},
     [SBR_SUBTITLE_FORMAT_SRV3   ] = {"subrandr/srv3", "srv3"},
+    [SBR_SUBTITLE_FORMAT_WEBVTT ] = {"subrandr/webvtt", "webvtt"},
 };
 
 struct sub_codec_ext {
@@ -78,6 +79,7 @@ struct sub_codec_ext {
 static const struct sub_codec_ext codec_exts[] = {
     {".srv3", fmt_to_codec[SBR_SUBTITLE_FORMAT_SRV3]},
     {".ytt",  fmt_to_codec[SBR_SUBTITLE_FORMAT_SRV3]},
+    {".vtt",  fmt_to_codec[SBR_SUBTITLE_FORMAT_WEBVTT]},
     {NULL}
 };
 
@@ -107,6 +109,10 @@ static int demux_open_sbr(struct demuxer *demuxer, enum demux_check check)
     }
 
     if (check != DEMUX_CHECK_REQUEST && !codec_info.codec)
+        return -1;
+
+    if (check == DEMUX_CHECK_NORMAL && !strcmp(codec_info.codec_desc, "webvtt") &&
+        !demuxer->opts->prefer_subrandr_for_webvtt)
         return -1;
 
     struct demux_sbr_priv *priv = talloc_zero(demuxer, struct demux_sbr_priv);

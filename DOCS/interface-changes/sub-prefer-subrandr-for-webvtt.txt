@@ -1,0 +1,1 @@
+add `sub-prefer-subrandr-for-webvtt` option

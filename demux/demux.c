@@ -118,6 +118,9 @@ const struct m_sub_options demux_conf = {
         {"mf-fps", OPT_DOUBLE(mf_fps)},
         {"mf-type", OPT_STRING(mf_type)},
         {"sub-create-cc-track", OPT_BOOL(create_ccs)},
+#if HAVE_SUBRANDR
+        {"sub-prefer-subrandr-for-webvtt", OPT_BOOL(prefer_subrandr_for_webvtt)},
+#endif
         {"stream-record", OPT_STRING(record_file)},
         {"video-backward-overlap", OPT_CHOICE(video_back_preroll, {"auto", -1}),
             M_RANGE(0, 1024)},

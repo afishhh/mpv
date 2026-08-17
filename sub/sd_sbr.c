@@ -97,7 +97,8 @@ static int init(struct sd *sd)
 {
     if (!sd->codec->codec)
         return -1;
-    if (strcmp(sd->codec->codec, "subrandr/srv3"))
+    if (strcmp(sd->codec->codec, "subrandr/srv3") &&
+        strcmp(sd->codec->codec, "subrandr/webvtt"))
         return -1;
 
     uint32_t major, minor, patch;
@@ -145,8 +146,10 @@ static void decode(struct sd *sd, struct demux_packet *packet)
         sbr_renderer_set_subtitles(ctx->sbr_renderer, NULL);
 
     sbr_subtitle_format fmt = SBR_SUBTITLE_FORMAT_UNKNOWN;
-    if (!strcmp(sd->codec->codec, "subrandr/srv3") )
+    if (!strcmp(sd->codec->codec, "subrandr/srv3"))
         fmt = SBR_SUBTITLE_FORMAT_SRV3;
+    if (!strcmp(sd->codec->codec, "subrandr/webvtt"))
+        fmt = SBR_SUBTITLE_FORMAT_WEBVTT;
 
     ctx->sbr_subtitles = sbr_load_text(
         ctx->sbr_library,
