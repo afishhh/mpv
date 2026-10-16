@@ -181,22 +181,26 @@ static struct sub_bitmaps *get_bitmaps(struct sd *sd, struct mp_osd_res dim,
     if (opts->sub_forced_events_only)
         return NULL;
 
+    int layout_width = dim.w - MPMAX(0, dim.ml) - MPMAX(0, dim.mr);
+    int layout_height = dim.h - MPMAX(0, dim.mt) - MPMAX(0, dim.mb);
+    sbr_vec2d scale = {
+        .x = (double)(dim.w - MPMIN(0, dim.ml) - MPMIN(0, dim.mr)) / dim.w,
+        .y = (double)(dim.h - MPMIN(0, dim.mt) - MPMIN(0, dim.mb)) / dim.h
+    };
+    sbr_vec2d trans = {
+        .x = (double)MPMIN(0, dim.ml),
+        .y = (double)MPMIN(0, dim.mt),
+    };
+
     struct sbr_subtitle_context context = (sbr_subtitle_context) {
         .dpi = 72,
-        .video_height = (int32_t)(dim.h - dim.mt - dim.mb) << 6,
-        .video_width = (int32_t)(dim.w - dim.ml - dim.mr) << 6,
+        .video_width = (int32_t)layout_width << 6,
+        .video_height = (int32_t)layout_height << 6,
     };
     struct sbr_rect2i clip_rect = {
         .min_x = 0, .min_y = 0,
         .max_x = dim.w, .max_y = dim.h
     };
-
-    // Translate our clip rect by the zoom (negative) margin to get the
-    // part we're actually interested in.
-    clip_rect.min_x -= MPMIN(0, dim.ml);
-    clip_rect.min_y -= MPMIN(0, dim.mt);
-    clip_rect.max_x -= MPMIN(0, dim.ml);
-    clip_rect.max_y -= MPMIN(0, dim.mt);
 
     if (opts->sub_use_margins) {
         context.padding_left = (int32_t)MPMAX(0, dim.ml) << 6;
@@ -207,8 +211,12 @@ static struct sub_bitmaps *get_bitmaps(struct sd *sd, struct mp_osd_res dim,
         // Remove normal (positive) margins from our clip rect as
         // those are already included in `dim.{w,h}` but we specifically
         // don't want them here.
-        clip_rect.max_x -= MPMAX(0, dim.ml) + MPMAX(0, dim.mr);
-        clip_rect.max_y -= MPMAX(0, dim.mt) + MPMAX(0, dim.mb);
+        clip_rect.min_x += MPMAX(0, dim.ml);
+        clip_rect.min_y += MPMAX(0, dim.mt);
+        clip_rect.max_x -= MPMAX(0, dim.mr);
+        clip_rect.max_y -= MPMAX(0, dim.mb);
+        trans.x += MPMAX(0, dim.ml);
+        trans.y += MPMAX(0, dim.mt);
     }
 
     unsigned t = lrint(pts * 1000);
@@ -222,6 +230,9 @@ static struct sub_bitmaps *get_bitmaps(struct sd *sd, struct mp_osd_res dim,
                            !cached || sbr_renderer_did_change(ctx->sbr_renderer, &context, t);
     if (redraw_required) {
         sbr_renderer_set_subtitles(ctx->sbr_renderer, ctx->sbr_subtitles);
+        sbr_renderer_reset_transform(ctx->sbr_renderer);
+        sbr_renderer_apply_translation(ctx->sbr_renderer, trans);
+        sbr_renderer_apply_scale(ctx->sbr_renderer, scale);
         sbr_instanced_raster_pass *pass =
             sbr_renderer_render_instanced(ctx->sbr_renderer, &context, t, clip_rect, 0);
         if (!pass) {
@@ -234,17 +245,6 @@ static struct sub_bitmaps *get_bitmaps(struct sd *sd, struct mp_osd_res dim,
 
         mp_sub_packer_pack_sbr(ctx->packer, pass, &res);
         sbr_instanced_raster_pass_finish(pass);
-
-        for (int i = 0; i < res.num_parts; ++i) {
-            struct sub_bitmap *part = &res.parts[i];
-            if (opts->sub_use_margins) {
-                part->x += MPMIN(0, dim.ml);
-                part->y += MPMIN(0, dim.mt);
-            } else {
-                part->x += dim.ml;
-                part->y += dim.mt;
-            }
-        }
     } else
         res = *cached;
 
