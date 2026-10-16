@@ -118,6 +118,8 @@ struct sub_bitmaps *sub_bitmaps_copy(struct sub_bitmap_copy_cache **cache,
 struct mp_osd_res {
     int w, h; // screen dimensions, including black borders
     int mt, mb, ml, mr; // borders (top, bottom, left, right)
+    int umt, umb, uml, umr; // borders before zoom/scale (top, bottom, left, right)
+    float sx, sy; // total scale applied for zoom/scale
     double display_par;
 };
 

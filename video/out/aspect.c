@@ -79,13 +79,21 @@ static void src_dst_split_scaling(int src_size, int dst_size,
                                   bool recenter,
                                   int *src_start, int *src_end,
                                   int *dst_start, int *dst_end,
-                                  int *osd_margin_a, int *osd_margin_b)
+                                  int *osd_margin_a, int *osd_margin_b,
+                                  int *osd_umargin_a, int *osd_umargin_b,
+                                  float *osd_scale)
 {
+    int64_t prezoom_scaled_src_size = scaled_src_size;
+
     scaled_src_size *= powf(2, zoom) * scale;
     scaled_src_size = MPMAX(scaled_src_size, 1);
     if (recenter && dst_size >= scaled_src_size)
         align = 0;
     align = (align + 1) / 2;
+
+    *osd_umargin_a = (dst_size - prezoom_scaled_src_size) * align;
+    *osd_umargin_b = dst_size - (*osd_umargin_a + prezoom_scaled_src_size);
+    *osd_scale = ((float)scaled_src_size / (float)prezoom_scaled_src_size);
 
     *dst_start = (dst_size - scaled_src_size) * align + pan * scaled_src_size;
     *dst_end = *dst_start + scaled_src_size;
@@ -178,12 +186,16 @@ void mp_get_src_dst_rects(struct mp_log *log, struct mp_vo_opts *opts,
                               opts->zoom, opts->align_x, opts->pan_x, opts->scale_x,
                               opts->recenter,
                               &src.x0, &src.x1, &dst.x0, &dst.x1,
-                              &osd.ml, &osd.mr);
+                              &osd.ml, &osd.mr,
+                              &osd.uml, &osd.umr,
+                              &osd.sx);
         src_dst_split_scaling(src_h, vid_window_h, scaled_height,
                               opts->zoom, opts->align_y, opts->pan_y, opts->scale_y,
                               opts->recenter,
                               &src.y0, &src.y1, &dst.y0, &dst.y1,
-                              &osd.mt, &osd.mb);
+                              &osd.mt, &osd.mb,
+                              &osd.umt, &osd.umb,
+                              &osd.sy);
     }
 
     dst.x0 += margin_x[0];
@@ -193,10 +205,13 @@ void mp_get_src_dst_rects(struct mp_log *log, struct mp_vo_opts *opts,
 
     // OSD really uses the full window, but was computed on the margin-cut
     // video sub-window. Correct it to the full window.
-    osd.ml += margin_x[0];
-    osd.mr += margin_x[1];
-    osd.mt += margin_y[0];
-    osd.mb += margin_y[1];
+    osd.ml += margin_x[0], osd.uml += margin_x[0];
+    osd.mr += margin_x[1], osd.umr += margin_x[1];
+    osd.mt += margin_y[0], osd.umt += margin_y[0];
+    osd.mb += margin_y[1], osd.umb += margin_y[1];
+
+    if (margin_y[0] != 0)
+            abort();
 
     *out_src = src;
     *out_dst = dst;
