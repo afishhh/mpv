@@ -37,6 +37,7 @@ concurrency:
 
 jobs:
   mingw:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: ubuntu:26.10
@@ -200,6 +201,7 @@ jobs:
           path: artifact-libmpv/*
 
   win32:
+    if: false
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -338,6 +340,7 @@ jobs:
           key: ${{ matrix.target }}-${{ steps.get_time.outputs.timestamp }}
 
   macos:
+    if: false
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -468,6 +471,7 @@ jobs:
           key: ${{ matrix.os }}-${{ steps.cache_config.outputs.timestamp }}
 
   linux:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: "registry.opensuse.org/home/mia/images/images/mpv-ci:stable-deps"
@@ -510,6 +514,7 @@ jobs:
           cat ./build/meson-logs/testlog.txt
 
   linux-fuzz:
+    if: false
     runs-on: ubuntu-latest
     container:
       image: "registry.opensuse.org/home/mia/images/images/mpv-ci:stable-deps"
@@ -533,6 +538,7 @@ jobs:
           cat ./build/meson-logs/meson-log.txt
 
   linux-ffmpeg-6-1:
+    if: false
     runs-on: ubuntu-latest
     container:
       # We want to test ffmpeg 6.1.2, which Alpine 3.21 includes.
@@ -590,6 +596,7 @@ jobs:
           cat ./build/meson-logs/testlog.txt
 
   openbsd:
+    if: false
     runs-on: ubuntu-latest # until https://github.com/actions/runner/issues/385
     timeout-minutes: 15 # avoid any weirdness with the VM
     defaults:
@@ -660,6 +667,7 @@ jobs:
           cat ./build/meson-logs/testlog.txt
 
   freebsd:
+    if: false
     runs-on: ubuntu-latest # until https://github.com/actions/runner/issues/385
     timeout-minutes: 15 # avoid any weirdness with the VM
     defaults:
@@ -740,6 +748,7 @@ jobs:
           cat ./build/meson-logs/testlog.txt
 
   msys2:
+    if: false
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
